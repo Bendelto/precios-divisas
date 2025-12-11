@@ -32,6 +32,13 @@ function precio_inteligente($valor) {
 // 4. CARGAR TOURS Y DETECTAR RUTA
 $tours = file_exists('data.json') ? json_decode(file_get_contents('data.json'), true) : [];
 
+// --- NUEVO: ORDENAR ALFABÉTICAMENTE POR NOMBRE ---
+uasort($tours, function($a, $b) {
+    // strcasecmp compara strings ignorando mayúsculas/minúsculas
+    return strcasecmp($a['nombre'], $b['nombre']);
+});
+// -------------------------------------------------
+
 // Detectar slug
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $base_path = dirname($_SERVER['SCRIPT_NAME']);
@@ -62,7 +69,7 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
         /* ESTILO PARA EL LOGO MODIFICADO */
         .main-logo {
             width: 300px;        /* Tamaño base escritorio */
-            max-width: 85%;      /* MÓVIL: Esto reduce el logo un 15% (más del 10% pedido) */
+            max-width: 85%;      /* MÓVIL: Esto reduce el logo un 15% */
             height: auto;
             display: block;
             margin: 0 auto;
