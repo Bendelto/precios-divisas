@@ -52,51 +52,81 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
     <title><?= $singleTour ? $singleTour['nombre'] : 'Lista de Precios' ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        body { background-color: #f8f9fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #333; }
         
         /* Optimización Móvil */
-        .container { max-width: 600px; } /* Limitar ancho en desktop para simular app */
+        .container { max-width: 600px; } 
         .card-price { 
-            border: 0; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+            border: 1px solid #f0f0f0; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
             text-decoration: none; 
             color: inherit; 
             display: block; 
             background: white;
+            transition: transform 0.2s;
         }
         
-        /* Tipografía compacta */
-        h1, h3 { font-weight: 700; letter-spacing: -0.5px; }
+        /* Tipografía */
+        h1, h3, h5, h6 { font-weight: 700; letter-spacing: -0.3px; color: #2c3e50; }
+        
+        /* Colores de moneda */
         .price-usd { color: #198754; font-weight: 700; }
         .price-brl { color: #0d6efd; font-weight: 700; }
         
         /* Badges y Etiquetas */
-        .badge-tasa { font-size: 0.7rem; background: #e9ecef; color: #6c757d; padding: 4px 8px; border-radius: 6px; }
+        .badge-tasa { font-size: 0.7rem; background: #fff; border: 1px solid #dee2e6; color: #6c757d; padding: 4px 8px; border-radius: 6px; }
         .lbl-type { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: #adb5bd; font-weight: bold; }
 
-        /* Estilos Calculadora */
-        .calc-box { background-color: #eef2f7; border-radius: 12px; padding: 15px; }
-        .form-control-qty { text-align: center; font-weight: bold; border: none; background: #fff; height: 45px; font-size: 1.2rem; }
-        .total-display { background: #212529; color: white; border-radius: 10px; padding: 15px; margin-top: 15px; }
+        /* Estilos Calculadora (NUEVO DISEÑO CLARO) */
+        .calc-box { background-color: #f8f9fa; border-radius: 12px; padding: 15px; border: 1px solid #edf2f7; }
+        .form-control-qty { text-align: center; font-weight: bold; border: 1px solid #dee2e6; background: #fff; height: 45px; font-size: 1.2rem; color: #495057; }
         
-        /* Botón atrás flotante o simple */
-        .btn-back { font-size: 1.2rem; text-decoration: none; color: #333; }
+        /* Caja de Total (FONDO CLARO) */
+        .total-display { 
+            background-color: #e7f1ff; /* Azul muy claro */
+            color: #0d6efd; /* Azul corporativo */
+            border: 1px solid #cce5ff;
+            border-radius: 12px; 
+            padding: 20px; 
+            margin-top: 20px; 
+        }
+        
+        .total-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; margin-bottom: 5px; letter-spacing: 1px; }
+        .total-cop { color: #212529; font-weight: 800; font-size: 2rem; line-height: 1; }
+        
+        /* Botón atrás y Catálogo */
+        .btn-back { font-size: 1.5rem; text-decoration: none; color: #212529; line-height: 1; }
+        .btn-catalogo {
+            background-color: white;
+            color: #495057;
+            border: 1px solid #ced4da;
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-weight: 600;
+            width: 100%;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-catalogo:hover { background-color: #f8f9fa; color: #212529; border-color: #adb5bd; }
+
     </style>
 </head>
-<body class="container py-3">
+<body class="container py-4">
 
     <?php if ($singleTour): ?>
-        <div class="d-flex align-items-center mb-3">
-            <a href="./" class="btn-back me-3">←</a>
-            <h5 class="mb-0 fw-bold text-truncate"><?= htmlspecialchars($singleTour['nombre']) ?></h5>
+        <div class="d-flex align-items-start mb-3">
+            <a href="./" class="btn-back me-3 mt-1">←</a>
+            <h4 class="mb-0 fw-bold" style="line-height: 1.3;"><?= htmlspecialchars($singleTour['nombre']) ?></h4>
         </div>
 
-        <div class="card card-price p-3 mb-3">
+        <div class="card card-price p-3 mb-4">
             <div class="row g-2 text-center mb-3">
                 <div class="col-6 border-end">
                     <span class="lbl-type">Adulto</span>
-                    <div class="fw-bold text-dark">$<?= number_format($singleTour['precio_cop']) ?></div>
+                    <div class="fw-bold text-dark fs-5">$<?= number_format($singleTour['precio_cop']) ?></div>
                     <div class="d-flex justify-content-center gap-2" style="font-size: 0.8rem;">
                         <span class="price-usd">$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?></span>
                         <span class="price-brl">R$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?></span>
@@ -105,42 +135,43 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                 <div class="col-6">
                     <span class="lbl-type">Niño <small>(<?= !empty($singleTour['rango_nino']) ? $singleTour['rango_nino'] : '-' ?>)</small></span>
                     <?php if(!empty($singleTour['precio_nino']) && $singleTour['precio_nino'] > 0): ?>
-                        <div class="fw-bold text-dark">$<?= number_format($singleTour['precio_nino']) ?></div>
+                        <div class="fw-bold text-dark fs-5">$<?= number_format($singleTour['precio_nino']) ?></div>
                         <div class="d-flex justify-content-center gap-2" style="font-size: 0.8rem;">
                             <span class="price-usd">$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?></span>
                             <span class="price-brl">R$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?></span>
                         </div>
                     <?php else: ?>
-                        <div class="text-muted mt-1">- No aplica -</div>
+                        <div class="text-muted mt-1 small">- No aplica -</div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <hr class="opacity-25 my-2">
+            <hr class="opacity-25 my-3">
 
             <div class="calc-box">
-                <h6 class="fw-bold mb-3 text-center">🔢 Calcular Total</h6>
-                <div class="row g-2">
-                    <div class="col-6">
+                <h6 class="fw-bold mb-3 text-center text-muted">🔢 Calcular Total a Pagar</h6>
+                <div class="row g-3 justify-content-center">
+                    <div class="col-5">
                         <label class="small text-muted mb-1 d-block text-center">Adultos</label>
                         <input type="number" id="qtyAdult" class="form-control form-control-qty shadow-sm" value="1" min="1" inputmode="numeric">
                     </div>
-                    <div class="col-6">
+                    <div class="col-5">
                         <label class="small text-muted mb-1 d-block text-center">Niños</label>
-                        <input type="number" id="qtyKid" class="form-control form-control-qty shadow-sm" value="0" min="0" inputmode="numeric" <?= (empty($singleTour['precio_nino']) || $singleTour['precio_nino'] == 0) ? 'disabled style="opacity:0.5"' : '' ?>>
+                        <input type="number" id="qtyKid" class="form-control form-control-qty shadow-sm" value="0" min="0" inputmode="numeric" <?= (empty($singleTour['precio_nino']) || $singleTour['precio_nino'] == 0) ? 'disabled style="background-color:#f2f2f2"' : '' ?>>
                     </div>
                 </div>
 
                 <div class="total-display text-center">
-                    <div class="small text-white-50 text-uppercase mb-1">Total Estimado</div>
-                    <h2 class="mb-0 fw-bold" id="totalCOP">$<?= number_format($singleTour['precio_cop']) ?></h2>
-                    <div class="row mt-2 pt-2 border-top border-secondary">
-                        <div class="col-6 border-end border-secondary">
-                            <div class="small text-white-50">USD 🇺🇸</div>
+                    <div class="total-label">Total Estimado</div>
+                    <div class="total-cop mb-2" id="totalCOP">$<?= number_format($singleTour['precio_cop']) ?></div>
+                    
+                    <div class="row pt-2 border-top border-primary-subtle mt-2">
+                        <div class="col-6 border-end border-primary-subtle">
+                            <div class="small text-muted">Dólares 🇺🇸</div>
                             <div class="fw-bold text-success fs-5" id="totalUSD">$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?></div>
                         </div>
                         <div class="col-6">
-                            <div class="small text-white-50">Reales 🇧🇷</div>
+                            <div class="small text-muted">Reales 🇧🇷</div>
                             <div class="fw-bold text-primary fs-5" id="totalBRL">R$ <?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?></div>
                         </div>
                     </div>
@@ -148,8 +179,11 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             </div>
         </div>
 
+        <a href="./" class="btn-catalogo shadow-sm mb-4">
+            Ver catálogo completo
+        </a>
+
         <script>
-            // Pasamos variables de PHP a JS
             const priceAdult = <?= $singleTour['precio_cop'] ?>;
             const priceKid = <?= !empty($singleTour['precio_nino']) ? $singleTour['precio_nino'] : 0 ?>;
             const rateUsd = <?= $tasa_tuya_usd ?>;
@@ -166,7 +200,6 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                 return '$' + new Intl.NumberFormat('es-CO').format(amount);
             }
 
-            // Función idéntica a PHP "precio_inteligente" (ceil * 2 / 2)
             function precioInteligente(valor) {
                 let redondeado = Math.ceil(valor * 2) / 2;
                 return redondeado;
@@ -178,26 +211,22 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
 
                 let totalCOP = (qA * priceAdult) + (qK * priceKid);
                 
-                // Actualizar COP
                 displayCOP.innerText = formatMoney(totalCOP);
 
-                // Actualizar USD
                 let totalUSD = precioInteligente(totalCOP / rateUsd);
                 displayUSD.innerText = '$' + totalUSD;
 
-                // Actualizar BRL
                 let totalBRL = precioInteligente(totalCOP / rateBrl);
                 displayBRL.innerText = 'R$ ' + totalBRL;
             }
 
-            // Listeners
             inputAdult.addEventListener('input', calculate);
             inputKid.addEventListener('input', calculate);
         </script>
 
     <?php else: ?>
-        <div class="text-center mb-4">
-            <h4 class="fw-bold text-dark mb-1">Descubre Cartagena 🌴</h4>
+        <div class="text-center mb-4 pt-2">
+            <h3 class="fw-bold text-dark mb-1">Descubre Cartagena 🌴</h3>
             
             <div class="d-flex justify-content-center gap-2 mt-2">
                 <span class="badge-tasa">🇺🇸 $<?= number_format($tasa_tuya_usd, 0) ?></span>
@@ -210,17 +239,17 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             <?php foreach ($tours as $slug => $tour): ?>
             <div class="col-12 col-md-6">
                 <a href="./<?= $slug ?>" class="card card-price p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0 text-truncate" style="max-width: 70%;"><?= htmlspecialchars($tour['nombre']) ?></h6>
-                        <span class="badge bg-light text-dark border">$<?= number_format($tour['precio_cop']) ?></span>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="fw-bold mb-0 text-dark" style="line-height: 1.4; padding-right: 10px;"><?= htmlspecialchars($tour['nombre']) ?></h6>
+                        <span class="badge bg-light text-dark border" style="white-space: nowrap;">$<?= number_format($tour['precio_cop']) ?></span>
                     </div>
                     
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center mt-2">
                         <div class="d-flex gap-3">
                             <div class="price-usd small">🇺🇸 $<?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_usd) ?></div>
                             <div class="price-brl small">🇧🇷 R$ <?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_brl) ?></div>
                         </div>
-                        <div class="text-muted opacity-50 small">➝</div>
+                        <div class="text-muted opacity-25 small">➝</div>
                     </div>
                 </a>
             </div>
