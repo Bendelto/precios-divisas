@@ -1,26 +1,60 @@
 <?php
 session_start();
-// --- SEGURIDAD ---
-if (isset($_POST['login']) && $_POST['pass'] == 'TU_CONTRASEÑA') { // <--- PON TU CONTRASEÑA AQUÍ
+
+// --- 1. LOGIN OPTIMIZADO PARA MÓVIL ---
+if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') { // <--- CLAVE ACTUALIZADA
     $_SESSION['admin'] = true;
 }
+
 if (!isset($_SESSION['admin'])) {
-    echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-          <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
-            <form method="post" class="card p-4 shadow">
-                <h4 class="mb-3">Acceso Admin</h4>
-                <input type="password" name="pass" class="form-control mb-2" placeholder="Contraseña">
-                <button name="login" type="submit" class="btn btn-primary w-100">Entrar</button>
-            </form>
-          </div>';
+    ?>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Login Admin</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            body { background-color: #f0f2f5; }
+            .login-card { 
+                width: 100%; 
+                max-width: 400px; 
+                border: 0; 
+                border-radius: 16px; 
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            }
+            .form-control-lg { font-size: 1.1rem; }
+            .btn-lg { font-weight: 600; }
+        </style>
+    </head>
+    <body class="d-flex justify-content-center align-items-center vh-100 px-3">
+        <form method="post" class="card p-4 login-card">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-dark">🔐 Admin</h3>
+                <small class="text-muted">Descubre Cartagena</small>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small text-muted">Contraseña</label>
+                <input type="password" name="pass" class="form-control form-control-lg text-center" placeholder="••••••••" required>
+            </div>
+            <button name="login" type="submit" class="btn btn-primary w-100 btn-lg">Ingresar</button>
+        </form>
+    </body>
+    </html>
+    <?php
     exit;
 }
+
+// ==========================================
+//      CÓDIGO DEL PANEL DE ADMINISTRACIÓN
+// ==========================================
 
 // --- ARCHIVOS DE DATOS ---
 $fileTours = 'data.json';
 $fileConfig = 'config.json';
 
-// Cargar datos existentes
+// Cargar datos
 $tours = file_exists($fileTours) ? json_decode(file_get_contents($fileTours), true) : [];
 $config = file_exists($fileConfig) ? json_decode(file_get_contents($fileConfig), true) : ['margen_usd' => 200, 'margen_brl' => 200];
 
@@ -29,7 +63,7 @@ uasort($tours, function($a, $b) {
     return strcasecmp($a['nombre'], $b['nombre']);
 });
 
-// --- GUARDAR CONFIGURACIÓN DE TASAS ---
+// --- GUARDAR CONFIGURACIÓN ---
 if (isset($_POST['save_config'])) {
     $config['margen_usd'] = floatval($_POST['margen_usd']);
     $config['margen_brl'] = floatval($_POST['margen_brl']);
@@ -38,32 +72,26 @@ if (isset($_POST['save_config'])) {
     exit;
 }
 
-// --- LOGICA DE GUARDADO (CREAR O EDITAR) ---
+// --- GUARDAR / EDITAR TOUR ---
 if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
     $rango_adulto = !empty($_POST['rango_adulto']) ? $_POST['rango_adulto'] : ''; 
-    
-    // DATOS DE NIÑOS
     $precio_nino = !empty($_POST['precio_nino']) ? $_POST['precio_nino'] : 0;
     $rango_nino = !empty($_POST['rango_nino']) ? $_POST['rango_nino'] : '';
     
-    // 1. Crear SLUG
+    // Crear SLUG
     $slugInput = !empty($_POST['slug']) ? $_POST['slug'] : $nombre;
-    
-    // 2. Limpieza PROFUNDA del slug
     $cleanSlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slugInput)));
     $cleanSlug = trim($cleanSlug, '-');
     
-    // 3. DETECTAR SI ES UNA EDICIÓN DE SLUG (RENOMBRAR)
-    // Si venimos de editar y el slug original es diferente al nuevo, borramos el viejo
+    // Si es edición y cambia el slug, borrar el viejo
     if (!empty($_POST['original_slug']) && $_POST['original_slug'] != $cleanSlug) {
         if(isset($tours[$_POST['original_slug']])) {
             unset($tours[$_POST['original_slug']]);
         }
     }
 
-    // 4. GUARDAR / ACTUALIZAR
     $tours[$cleanSlug] = [
         'nombre' => $nombre, 
         'precio_cop' => $precio,
@@ -73,7 +101,7 @@ if (isset($_POST['add'])) {
     ];
     
     file_put_contents($fileTours, json_encode($tours));
-    header("Location: admin.php"); // Limpiar formulario
+    header("Location: admin.php");
     exit;
 }
 
@@ -101,151 +129,155 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Tours & Tasas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Panel Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilos específicos para Admin Móvil */
+        body { padding-bottom: 50px; background-color: #f8f9fa; }
+        .table-responsive { 
+            border-radius: 12px; 
+            background: white; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            overflow: hidden;
+        }
+        .table th { background-color: #f1f3f5; border-bottom: 2px solid #dee2e6; }
+        .btn-group-mobile { display: flex; gap: 5px; }
+        @media (max-width: 576px) {
+            .btn-group-mobile { flex-direction: column; }
+            .btn-sm { width: 100%; margin-bottom: 2px; }
+            h2 { font-size: 1.5rem; }
+        }
+    </style>
 </head>
-<body class="bg-light py-5">
-<div class="container">
+<body class="container py-4">
+    
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Panel de Control</h2>
-        <a href="index.php" target="_blank" class="btn btn-outline-success">Ver Página Pública</a>
+        <h2 class="fw-bold mb-0">Panel de Control</h2>
+        <a href="index.php" target="_blank" class="btn btn-success btn-sm fw-bold">Ver Web ↗</a>
     </div>
 
-    <div class="card mb-4 border-warning">
-        <div class="card-header bg-warning text-dark fw-bold">📉 Ajuste de Cambio (Protección)</div>
+    <div class="card mb-4 border-warning shadow-sm">
+        <div class="card-header bg-warning text-dark fw-bold">📉 Tasa de Cambio</div>
         <div class="card-body">
             <form method="post" class="row g-3">
-                <div class="col-md-5">
-                    <label>Margen a restar al Dólar (COP)</label>
-                    <div class="input-group">
+                <div class="col-6 col-md-5">
+                    <label class="small text-muted fw-bold">Resta Dólar</label>
+                    <div class="input-group input-group-sm">
                         <span class="input-group-text">-$</span>
                         <input type="number" name="margen_usd" class="form-control" value="<?= $config['margen_usd'] ?>" required>
                     </div>
                 </div>
-                <div class="col-md-5">
-                    <label>Margen a restar al Real (COP)</label>
-                    <div class="input-group">
+                <div class="col-6 col-md-5">
+                    <label class="small text-muted fw-bold">Resta Real</label>
+                    <div class="input-group input-group-sm">
                         <span class="input-group-text">-$</span>
                         <input type="number" name="margen_brl" class="form-control" value="<?= $config['margen_brl'] ?>" required>
                     </div>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" name="save_config" class="btn btn-dark w-100">Guardar</button>
+                <div class="col-12 col-md-2 d-flex align-items-end">
+                    <button type="submit" name="save_config" class="btn btn-dark btn-sm w-100">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card shadow-sm border-primary">
+    <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <span><?= $tourToEdit ? '✏️ Editando: ' . htmlspecialchars($tourToEdit['nombre']) : '➕ Nuevo Tour' ?></span>
+            <span class="fw-bold"><?= $tourToEdit ? '✏️ Editando Tour' : '➕ Nuevo Tour' ?></span>
             <?php if($tourToEdit): ?>
-                <a href="admin.php" class="btn btn-sm btn-light text-primary">Cancelar Edición</a>
+                <a href="admin.php" class="btn btn-sm btn-light text-primary py-0">Cancelar</a>
             <?php endif; ?>
         </div>
         <div class="card-body">
             <form method="post" class="row g-3" id="tourForm">
                 <input type="hidden" name="original_slug" value="<?= $editingSlug ?>">
 
-                <div class="col-12"><h6 class="text-muted border-bottom pb-2">Datos Principales</h6></div>
+                <div class="col-12"><h6 class="text-primary border-bottom pb-1 small text-uppercase fw-bold">Información Básica</h6></div>
                 
                 <div class="col-md-6">
-                    <label class="form-label">Nombre del Tour</label>
+                    <label class="form-label small">Nombre del Tour</label>
                     <input type="text" name="nombre" id="inputNombre" class="form-control" required value="<?= $tourToEdit ? htmlspecialchars($tourToEdit['nombre']) : '' ?>">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">URL Amigable (Auto)</label>
-                    <input type="text" name="slug" id="inputSlug" class="form-control bg-light" placeholder="se-genera-automatico" value="<?= $editingSlug ?>">
+                    <label class="form-label small">URL (Slug)</label>
+                    <input type="text" name="slug" id="inputSlug" class="form-control bg-light text-muted" placeholder="Auto-generado" value="<?= $editingSlug ?>">
                 </div>
                 
-                <div class="col-md-6">
-                    <label class="form-label">Precio Adulto (COP)</label>
+                <div class="col-6">
+                    <label class="form-label small">Precio Adulto</label>
                     <input type="number" name="precio" class="form-control" required value="<?= $tourToEdit ? $tourToEdit['precio_cop'] : '' ?>">
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Rango Edad Adulto</label>
-                    <input type="text" name="rango_adulto" class="form-control" placeholder="Ej: 10+ años" value="<?= $tourToEdit && isset($tourToEdit['rango_adulto']) ? htmlspecialchars($tourToEdit['rango_adulto']) : '' ?>">
+                <div class="col-6">
+                    <label class="form-label small">Edad Adulto</label>
+                    <input type="text" name="rango_adulto" class="form-control" placeholder="Ej: 10+" value="<?= $tourToEdit && isset($tourToEdit['rango_adulto']) ? htmlspecialchars($tourToEdit['rango_adulto']) : '' ?>">
                 </div>
 
-                <div class="col-12 mt-4"><h6 class="text-muted border-bottom pb-2">Datos Niños (Opcional)</h6></div>
+                <div class="col-12 mt-3"><h6 class="text-primary border-bottom pb-1 small text-uppercase fw-bold">Información Niños</h6></div>
                 
-                <div class="col-md-6">
-                    <label class="form-label">Precio Niño (COP)</label>
-                    <input type="number" name="precio_nino" class="form-control" placeholder="0 si no aplica" value="<?= $tourToEdit && !empty($tourToEdit['precio_nino']) ? $tourToEdit['precio_nino'] : '' ?>">
+                <div class="col-6">
+                    <label class="form-label small">Precio Niño</label>
+                    <input type="number" name="precio_nino" class="form-control" placeholder="0" value="<?= $tourToEdit && !empty($tourToEdit['precio_nino']) ? $tourToEdit['precio_nino'] : '' ?>">
                 </div>
-                <div class="col-md-6">
-                    <label class="form-label">Rango de Edad Niño</label>
-                    <input type="text" name="rango_nino" class="form-control" placeholder="Ej: 4 a 9 años" value="<?= $tourToEdit && isset($tourToEdit['rango_nino']) ? htmlspecialchars($tourToEdit['rango_nino']) : '' ?>">
+                <div class="col-6">
+                    <label class="form-label small">Edad Niño</label>
+                    <input type="text" name="rango_nino" class="form-control" placeholder="Ej: 4-9" value="<?= $tourToEdit && isset($tourToEdit['rango_nino']) ? htmlspecialchars($tourToEdit['rango_nino']) : '' ?>">
                 </div>
 
                 <div class="col-12 mt-4">
-                    <button type="submit" name="add" class="btn btn-primary w-100 btn-lg"><?= $tourToEdit ? 'Actualizar Tour' : 'Guardar Tour' ?></button>
+                    <button type="submit" name="add" class="btn btn-primary w-100 fw-bold py-2"><?= $tourToEdit ? 'Actualizar Tour' : 'Guardar Tour' ?></button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card mt-4 shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover align-middle">
-                <thead><tr><th>Tour</th><th>Adulto</th><th>Niño</th><th>Acciones</th></tr></thead>
-                <tbody>
-                    <?php foreach ($tours as $slug => $tour): ?>
-                    <tr class="<?= $slug == $editingSlug ? 'table-warning' : '' ?>">
-                        <td>
-                            <strong><?= htmlspecialchars($tour['nombre']) ?></strong><br>
-                            <small class="text-muted">/<?= $slug ?></small>
-                        </td>
-                        <td>
-                            $<?= number_format($tour['precio_cop']) ?><br>
-                            <small class="text-muted"><?= !empty($tour['rango_adulto']) ? $tour['rango_adulto'] : '' ?></small>
-                        </td>
-                        <td>
-                            <?php if(!empty($tour['precio_nino'])): ?>
-                                $<?= number_format($tour['precio_nino']) ?><br>
-                                <small class="text-muted"><?= $tour['rango_nino'] ?></small>
-                            <?php else: ?>
-                                <span class="text-muted">-</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <div class="btn-group" role="group">
-                                <a href="?edit=<?= $slug ?>" class="btn btn-warning btn-sm">Editar</a>
-                                <a href="?delete=<?= $slug ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar este tour?');">Borrar</a>
-                            </div>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Tour</th>
+                    <th>Precios</th>
+                    <th class="text-end pe-3">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($tours as $slug => $tour): ?>
+                <tr class="<?= $slug == $editingSlug ? 'table-warning' : '' ?>">
+                    <td class="ps-3">
+                        <span class="fw-bold d-block text-truncate" style="max-width: 150px;"><?= htmlspecialchars($tour['nombre']) ?></span>
+                        <small class="text-muted" style="font-size: 0.75rem;">/<?= $slug ?></small>
+                    </td>
+                    <td>
+                        <small class="d-block">Ad: $<?= number_format($tour['precio_cop']) ?></small>
+                        <?php if(!empty($tour['precio_nino'])): ?>
+                            <small class="d-block text-muted">Ni: $<?= number_format($tour['precio_nino']) ?></small>
+                        <?php endif; ?>
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="btn-group-mobile">
+                            <a href="?edit=<?= $slug ?>" class="btn btn-outline-primary btn-sm">✏️</a>
+                            <a href="?delete=<?= $slug ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Borrar?');">🗑️</a>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
-</div>
 
-<script>
-    const inputNombre = document.getElementById('inputNombre');
-    const inputSlug = document.getElementById('inputSlug');
-
-    // Solo auto-generar slug si NO estamos editando (o si el usuario borra el slug)
-    // Para simplificar, lo haremos siempre al escribir, pero el usuario puede ver que cambia.
-    inputNombre.addEventListener('input', function() {
-        // Solo generamos si el campo slug está vacio o si el usuario lo desea. 
-        // Si estamos editando, tal vez queramos mantener el slug viejo aunque cambiemos una letra del nombre.
-        // Pero para simplificar tu uso, haremos que sugiera.
+    <script>
+        const inputNombre = document.getElementById('inputNombre');
+        const inputSlug = document.getElementById('inputSlug');
         
-        // Comportamiento: Si escribes nombre, sugiere slug.
-        let text = this.value;
-        let slug = text.toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
-            .replace(/[^a-z0-9]+/g, '-') 
-            .replace(/^-+|-+$/g, ''); 
-            
-        // Si ya hay un valor en slug y estamos editando, quizas no quieras sobrescribirlo agresivamente
-        // Pero como es un app sencilla, sobrescribirlo ayuda a mantener URLs limpias.
-        inputSlug.value = slug;
-    });
-</script>
+        inputNombre.addEventListener('input', function() {
+            let text = this.value;
+            let slug = text.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+                .replace(/[^a-z0-9]+/g, '-') 
+                .replace(/^-+|-+$/g, ''); 
+            inputSlug.value = slug;
+        });
+    </script>
 
 </body>
 </html>
