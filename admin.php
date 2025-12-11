@@ -33,9 +33,18 @@ if (isset($_POST['save_config'])) {
     exit;
 }
 
-// --- AGREGAR TOUR ---
+// --- AGREGAR O EDITAR TOUR ---
 if (isset($_POST['add'])) {
-    $tours[] = ['nombre' => $_POST['nombre'], 'precio_cop' => $_POST['precio']];
+    $nombre = $_POST['nombre'];
+    $precio = $_POST['precio'];
+    // Crear SLUG: Si el usuario lo escribe lo usamos, si no, lo creamos del nombre
+    $slug = !empty($_POST['slug']) ? $_POST['slug'] : $nombre;
+    // Limpieza básica del slug (minúsculas, guiones, sin tildes)
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slug))));
+    
+    // Guardamos usando el SLUG como CLAVE (ID)
+    $tours[$slug] = ['nombre' => $nombre, 'precio_cop' => $precio];
+    
     file_put_contents($fileTours, json_encode($tours));
     header("Location: admin.php");
     exit;
@@ -43,8 +52,11 @@ if (isset($_POST['add'])) {
 
 // --- BORRAR TOUR ---
 if (isset($_GET['delete'])) {
-    unset($tours[$_GET['delete']]);
-    file_put_contents($fileTours, json_encode(array_values($tours)));
+    $slugToDelete = $_GET['delete'];
+    if(isset($tours[$slugToDelete])) {
+        unset($tours[$slugToDelete]);
+        file_put_contents($fileTours, json_encode($tours));
+    }
     header("Location: admin.php");
     exit;
 }
@@ -68,7 +80,6 @@ if (isset($_GET['delete'])) {
     <div class="card mb-4 border-warning">
         <div class="card-header bg-warning text-dark fw-bold">📉 Ajuste de Cambio (Protección)</div>
         <div class="card-body">
-            <p class="small text-muted">Aquí defines cuánto restar a la tasa oficial para calcular tus precios. Ejemplo: Si el dólar oficial está a $4.000 y pones 200 de margen, el sistema usará $3.800.</p>
             <form method="post" class="row g-3">
                 <div class="col-md-5">
                     <label>Margen a restar al Dólar (COP)</label>
@@ -85,24 +96,31 @@ if (isset($_GET['delete'])) {
                     </div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" name="save_config" class="btn btn-dark w-100">Guardar Tasa</button>
+                    <button type="submit" name="save_config" class="btn btn-dark w-100">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">Nuevo Tour</div>
+        <div class="card-header bg-primary text-white">Nuevo / Editar Tour</div>
         <div class="card-body">
             <form method="post" class="row g-3">
-                <div class="col-md-6">
-                    <input type="text" name="nombre" class="form-control" placeholder="Nombre del Tour" required>
+                <div class="col-md-4">
+                    <label class="form-label">Nombre del Tour</label>
+                    <input type="text" name="nombre" class="form-control" required>
                 </div>
                 <div class="col-md-4">
-                    <input type="number" name="precio" class="form-control" placeholder="Precio en Pesos (COP)" required>
+                    <label class="form-label">URL (Slug)</label>
+                    <input type="text" name="slug" class="form-control" placeholder="ej: isla-palma (opcional)">
+                    <small class="text-muted">Si lo dejas vacío, se crea automático.</small>
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" name="add" class="btn btn-primary w-100">Agregar</button>
+                    <label class="form-label">Precio COP</label>
+                    <input type="number" name="precio" class="form-control" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" name="add" class="btn btn-primary w-100">Guardar</button>
                 </div>
             </form>
         </div>
@@ -111,13 +129,14 @@ if (isset($_GET['delete'])) {
     <div class="card mt-4 shadow-sm">
         <div class="card-body">
             <table class="table table-hover">
-                <thead><tr><th>Tour</th><th>Precio COP</th><th>Acción</th></tr></thead>
+                <thead><tr><th>URL (Slug)</th><th>Tour</th><th>Precio COP</th><th>Acción</th></tr></thead>
                 <tbody>
-                    <?php foreach ($tours as $id => $tour): ?>
+                    <?php foreach ($tours as $slug => $tour): ?>
                     <tr>
+                        <td><code><?= $slug ?></code></td>
                         <td><?= htmlspecialchars($tour['nombre']) ?></td>
                         <td>$<?= number_format($tour['precio_cop']) ?></td>
-                        <td><a href="?delete=<?= $id ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar?');">Borrar</a></td>
+                        <td><a href="?delete=<?= $slug ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar?');">Borrar</a></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>

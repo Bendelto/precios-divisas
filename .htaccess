@@ -1,0 +1,9 @@
+RewriteEngine On
+RewriteBase /precios/
+
+# Si el archivo o carpeta existe real, no hacer nada
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Si no, enviar todo a index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
