@@ -24,11 +24,10 @@ $fileConfig = 'config.json';
 $tours = file_exists($fileTours) ? json_decode(file_get_contents($fileTours), true) : [];
 $config = file_exists($fileConfig) ? json_decode(file_get_contents($fileConfig), true) : ['margen_usd' => 200, 'margen_brl' => 200];
 
-// --- NUEVO: ORDENAR ALFABÉTICAMENTE EN EL ADMIN ---
+// --- ORDENAR ALFABÉTICAMENTE ---
 uasort($tours, function($a, $b) {
     return strcasecmp($a['nombre'], $b['nombre']);
 });
-// -------------------------------------------------
 
 // --- GUARDAR CONFIGURACIÓN DE TASAS ---
 if (isset($_POST['save_config'])) {
@@ -39,7 +38,7 @@ if (isset($_POST['save_config'])) {
     exit;
 }
 
-// --- AGREGAR O EDITAR TOUR ---
+// --- LOGICA DE GUARDADO (CREAR O EDITAR) ---
 if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
@@ -56,9 +55,15 @@ if (isset($_POST['add'])) {
     $cleanSlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slugInput)));
     $cleanSlug = trim($cleanSlug, '-');
     
-    // Guardamos usando el SLUG limpio como CLAVE
-    // Nota: Al guardar, recargamos el array original sin ordenar para no perder claves, 
-    // pero PHP maneja arrays asociativos bien.
+    // 3. DETECTAR SI ES UNA EDICIÓN DE SLUG (RENOMBRAR)
+    // Si venimos de editar y el slug original es diferente al nuevo, borramos el viejo
+    if (!empty($_POST['original_slug']) && $_POST['original_slug'] != $cleanSlug) {
+        if(isset($tours[$_POST['original_slug']])) {
+            unset($tours[$_POST['original_slug']]);
+        }
+    }
+
+    // 4. GUARDAR / ACTUALIZAR
     $tours[$cleanSlug] = [
         'nombre' => $nombre, 
         'precio_cop' => $precio,
@@ -68,7 +73,7 @@ if (isset($_POST['add'])) {
     ];
     
     file_put_contents($fileTours, json_encode($tours));
-    header("Location: admin.php");
+    header("Location: admin.php"); // Limpiar formulario
     exit;
 }
 
@@ -81,6 +86,14 @@ if (isset($_GET['delete'])) {
     }
     header("Location: admin.php");
     exit;
+}
+
+// --- CARGAR DATOS PARA EDITAR ---
+$tourToEdit = null;
+$editingSlug = '';
+if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
+    $tourToEdit = $tours[$_GET['edit']];
+    $editingSlug = $_GET['edit'];
 }
 ?>
 
@@ -124,44 +137,50 @@ if (isset($_GET['delete'])) {
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">Nuevo / Editar Tour</div>
+    <div class="card shadow-sm border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span><?= $tourToEdit ? '✏️ Editando: ' . htmlspecialchars($tourToEdit['nombre']) : '➕ Nuevo Tour' ?></span>
+            <?php if($tourToEdit): ?>
+                <a href="admin.php" class="btn btn-sm btn-light text-primary">Cancelar Edición</a>
+            <?php endif; ?>
+        </div>
         <div class="card-body">
             <form method="post" class="row g-3" id="tourForm">
-                
+                <input type="hidden" name="original_slug" value="<?= $editingSlug ?>">
+
                 <div class="col-12"><h6 class="text-muted border-bottom pb-2">Datos Principales</h6></div>
                 
                 <div class="col-md-6">
                     <label class="form-label">Nombre del Tour</label>
-                    <input type="text" name="nombre" id="inputNombre" class="form-control" required>
+                    <input type="text" name="nombre" id="inputNombre" class="form-control" required value="<?= $tourToEdit ? htmlspecialchars($tourToEdit['nombre']) : '' ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">URL Amigable (Auto)</label>
-                    <input type="text" name="slug" id="inputSlug" class="form-control bg-light" placeholder="se-genera-automatico">
+                    <input type="text" name="slug" id="inputSlug" class="form-control bg-light" placeholder="se-genera-automatico" value="<?= $editingSlug ?>">
                 </div>
                 
                 <div class="col-md-6">
                     <label class="form-label">Precio Adulto (COP)</label>
-                    <input type="number" name="precio" class="form-control" required>
+                    <input type="number" name="precio" class="form-control" required value="<?= $tourToEdit ? $tourToEdit['precio_cop'] : '' ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Rango Edad Adulto</label>
-                    <input type="text" name="rango_adulto" class="form-control" placeholder="Ej: 10+ años">
+                    <input type="text" name="rango_adulto" class="form-control" placeholder="Ej: 10+ años" value="<?= $tourToEdit && isset($tourToEdit['rango_adulto']) ? htmlspecialchars($tourToEdit['rango_adulto']) : '' ?>">
                 </div>
 
                 <div class="col-12 mt-4"><h6 class="text-muted border-bottom pb-2">Datos Niños (Opcional)</h6></div>
                 
                 <div class="col-md-6">
                     <label class="form-label">Precio Niño (COP)</label>
-                    <input type="number" name="precio_nino" class="form-control" placeholder="0 si no aplica">
+                    <input type="number" name="precio_nino" class="form-control" placeholder="0 si no aplica" value="<?= $tourToEdit && !empty($tourToEdit['precio_nino']) ? $tourToEdit['precio_nino'] : '' ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Rango de Edad Niño</label>
-                    <input type="text" name="rango_nino" class="form-control" placeholder="Ej: 4 a 9 años">
+                    <input type="text" name="rango_nino" class="form-control" placeholder="Ej: 4 a 9 años" value="<?= $tourToEdit && isset($tourToEdit['rango_nino']) ? htmlspecialchars($tourToEdit['rango_nino']) : '' ?>">
                 </div>
 
                 <div class="col-12 mt-4">
-                    <button type="submit" name="add" class="btn btn-primary w-100 btn-lg">Guardar Tour</button>
+                    <button type="submit" name="add" class="btn btn-primary w-100 btn-lg"><?= $tourToEdit ? 'Actualizar Tour' : 'Guardar Tour' ?></button>
                 </div>
             </form>
         </div>
@@ -169,11 +188,11 @@ if (isset($_GET['delete'])) {
 
     <div class="card mt-4 shadow-sm">
         <div class="card-body">
-            <table class="table table-hover">
-                <thead><tr><th>Tour</th><th>Adulto</th><th>Niño</th><th>Acción</th></tr></thead>
+            <table class="table table-hover align-middle">
+                <thead><tr><th>Tour</th><th>Adulto</th><th>Niño</th><th>Acciones</th></tr></thead>
                 <tbody>
                     <?php foreach ($tours as $slug => $tour): ?>
-                    <tr>
+                    <tr class="<?= $slug == $editingSlug ? 'table-warning' : '' ?>">
                         <td>
                             <strong><?= htmlspecialchars($tour['nombre']) ?></strong><br>
                             <small class="text-muted">/<?= $slug ?></small>
@@ -190,7 +209,12 @@ if (isset($_GET['delete'])) {
                                 <span class="text-muted">-</span>
                             <?php endif; ?>
                         </td>
-                        <td><a href="?delete=<?= $slug ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar?');">Borrar</a></td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="?edit=<?= $slug ?>" class="btn btn-warning btn-sm">Editar</a>
+                                <a href="?delete=<?= $slug ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar este tour?');">Borrar</a>
+                            </div>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -203,13 +227,22 @@ if (isset($_GET['delete'])) {
     const inputNombre = document.getElementById('inputNombre');
     const inputSlug = document.getElementById('inputSlug');
 
+    // Solo auto-generar slug si NO estamos editando (o si el usuario borra el slug)
+    // Para simplificar, lo haremos siempre al escribir, pero el usuario puede ver que cambia.
     inputNombre.addEventListener('input', function() {
+        // Solo generamos si el campo slug está vacio o si el usuario lo desea. 
+        // Si estamos editando, tal vez queramos mantener el slug viejo aunque cambiemos una letra del nombre.
+        // Pero para simplificar tu uso, haremos que sugiera.
+        
+        // Comportamiento: Si escribes nombre, sugiere slug.
         let text = this.value;
         let slug = text.toLowerCase()
             .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
             .replace(/[^a-z0-9]+/g, '-') 
             .replace(/^-+|-+$/g, ''); 
             
+        // Si ya hay un valor en slug y estamos editando, quizas no quieras sobrescribirlo agresivamente
+        // Pero como es un app sencilla, sobrescribirlo ayuda a mantener URLs limpias.
         inputSlug.value = slug;
     });
 </script>
