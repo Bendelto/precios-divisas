@@ -23,7 +23,7 @@ $tasa_oficial_brl = 1 / $rates['rates']['BRL'];
 $tasa_tuya_usd = $tasa_oficial_usd - $margen_usd;
 $tasa_tuya_brl = $tasa_oficial_brl - $margen_brl;
 
-// --- FUNCIÓN DE REDONDEO INTELIGENTE (0.5 ARRIBA) ---
+// FUNCIÓN DE REDONDEO INTELIGENTE (0.5 ARRIBA)
 function precio_inteligente($valor) {
     $redondeado = ceil($valor * 2) / 2;
     return (float)$redondeado; 
@@ -72,8 +72,12 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
 
         .price-usd { color: #198754; font-weight: 700; font-size: 1.3rem; }
         .price-brl { color: #0d6efd; font-weight: 700; font-size: 1.3rem; }
-        /* Badge más limpio */
+        .price-sub { font-size: 1.1rem; } /* Tamaño ligeramente menor para niños */
+        
         .badge-tasa { font-size: 0.8rem; font-weight: 500; background: #e9ecef; color: #495057; padding: 6px 12px; border-radius: 20px; border: 1px solid #dee2e6; }
+        
+        /* Estilos para etiquetas Adulto/Niño */
+        .lbl-type { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #6c757d; font-weight: bold; margin-bottom: 2px; display: block; }
     </style>
 </head>
 <body class="container py-5">
@@ -101,25 +105,38 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             <div class="col-md-6 col-lg-5">
                 <div class="card card-price p-4 text-center cursor-default" style="cursor: default;">
                     <h3 class="fw-bold mb-3"><?= htmlspecialchars($singleTour['nombre']) ?></h3>
-                    <div class="bg-light p-3 rounded mb-3">
-                        <small class="text-uppercase text-muted fw-bold">Precio Base</small><br>
-                        <span class="fs-4">$<?= number_format($singleTour['precio_cop']) ?> COP</span>
-                    </div>
                     
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="border rounded p-2">
-                                <small>🇺🇸 Dólares</small><br>
+                    <div class="bg-light p-3 rounded mb-3">
+                        <span class="lbl-type">Adultos</span>
+                        <span class="fs-4 d-block">$<?= number_format($singleTour['precio_cop']) ?> COP</span>
+                        <div class="row g-2 mt-2">
+                            <div class="col-6">
+                                <small>🇺🇸 </small> 
                                 <span class="price-usd">$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?></span>
                             </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="border rounded p-2">
-                                <small>🇧🇷 Reales</small><br>
+                            <div class="col-6">
+                                <small>🇧🇷 </small>
                                 <span class="price-brl">R$ <?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?></span>
                             </div>
                         </div>
                     </div>
+
+                    <?php if(!empty($singleTour['precio_nino']) && $singleTour['precio_nino'] > 0): ?>
+                    <div class="bg-white border p-3 rounded mb-3">
+                        <span class="lbl-type">Niños <small class="fw-normal text-muted">(<?= $singleTour['rango_nino'] ?>)</small></span>
+                        <span class="fs-5 d-block text-secondary">$<?= number_format($singleTour['precio_nino']) ?> COP</span>
+                        <div class="row g-2 mt-2">
+                            <div class="col-6">
+                                <small>🇺🇸 </small> 
+                                <span class="price-usd price-sub">$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?></span>
+                            </div>
+                            <div class="col-6">
+                                <small>🇧🇷 </small>
+                                <span class="price-brl price-sub">R$ <?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                     
                     <a href="./" class="btn btn-dark w-100 mt-4">Ver todos los tours</a>
                 </div>
@@ -131,19 +148,35 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             <?php foreach ($tours as $slug => $tour): ?>
             <div class="col-md-6 col-lg-4">
                 <a href="./<?= $slug ?>" class="card card-price h-100 p-3">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <h5 class="card-title fw-bold mb-0"><?= htmlspecialchars($tour['nombre']) ?></h5>
-                        <span class="badge bg-light text-dark border">$<?= number_format($tour['precio_cop']) ?> COP</span>
+                    <h5 class="card-title fw-bold mb-3 text-center"><?= htmlspecialchars($tour['nombre']) ?></h5>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="lbl-type">Adultos</span>
+                            <span class="badge bg-light text-dark border">$<?= number_format($tour['precio_cop']) ?></span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                             <span class="price-usd fs-5">🇺🇸 $<?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_usd) ?></span>
+                             <span class="price-brl fs-5">🇧🇷 R$ <?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_brl) ?></span>
+                        </div>
                     </div>
-                    <hr class="my-3 opacity-25">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="price-usd">🇺🇸 $<?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_usd) ?></div>
-                            <div class="price-brl">🇧🇷 R$ <?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_brl) ?></div>
+
+                    <?php if(!empty($tour['precio_nino']) && $tour['precio_nino'] > 0): ?>
+                    <hr class="my-2 opacity-25">
+                    <div class="mb-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="lbl-type">Niños <span style="font-size:0.6rem; text-transform:none;">(<?= $tour['rango_nino'] ?>)</span></span>
+                            <span class="badge bg-white text-muted border">$<?= number_format($tour['precio_nino']) ?></span>
                         </div>
-                        <div class="text-muted opacity-50">
-                            ➝
+                        <div class="d-flex justify-content-between mt-1">
+                             <span class="price-usd fs-6 text-opacity-75">🇺🇸 $<?= precio_inteligente($tour['precio_nino'] / $tasa_tuya_usd) ?></span>
+                             <span class="price-brl fs-6 text-opacity-75">🇧🇷 R$ <?= precio_inteligente($tour['precio_nino'] / $tasa_tuya_brl) ?></span>
                         </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="text-end mt-2 text-muted opacity-50" style="font-size: 0.8rem;">
+                        Ver detalles ➝
                     </div>
                 </a>
             </div>

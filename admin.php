@@ -38,17 +38,24 @@ if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
     
+    // NUEVOS DATOS DE NIÑOS
+    $precio_nino = !empty($_POST['precio_nino']) ? $_POST['precio_nino'] : 0;
+    $rango_nino = !empty($_POST['rango_nino']) ? $_POST['rango_nino'] : '';
+    
     // 1. Crear SLUG
     $slugInput = !empty($_POST['slug']) ? $_POST['slug'] : $nombre;
     
-    // 2. Limpieza PROFUNDA del slug (Corrección solicitada)
-    // Transliterar a ASCII, minúsculas, reemplazar no-alfanuméricos por guiones
+    // 2. Limpieza PROFUNDA del slug
     $cleanSlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slugInput)));
-    // 3. Eliminar guiones sobrantes al inicio o final (TRIM específico)
     $cleanSlug = trim($cleanSlug, '-');
     
     // Guardamos usando el SLUG limpio como CLAVE
-    $tours[$cleanSlug] = ['nombre' => $nombre, 'precio_cop' => $precio];
+    $tours[$cleanSlug] = [
+        'nombre' => $nombre, 
+        'precio_cop' => $precio,
+        'precio_nino' => $precio_nino, // Guardar precio niño
+        'rango_nino' => $rango_nino    // Guardar rango edad
+    ];
     
     file_put_contents($fileTours, json_encode($tours));
     header("Location: admin.php");
@@ -111,20 +118,35 @@ if (isset($_GET['delete'])) {
         <div class="card-header bg-primary text-white">Nuevo / Editar Tour</div>
         <div class="card-body">
             <form method="post" class="row g-3" id="tourForm">
-                <div class="col-md-4">
+                
+                <div class="col-12"><h6 class="text-muted border-bottom pb-2">Datos Principales</h6></div>
+                
+                <div class="col-md-6">
                     <label class="form-label">Nombre del Tour</label>
                     <input type="text" name="nombre" id="inputNombre" class="form-control" required>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">URL Amigable (Auto)</label>
                     <input type="text" name="slug" id="inputSlug" class="form-control bg-light" placeholder="se-genera-automatico">
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Precio COP</label>
+                <div class="col-md-12">
+                    <label class="form-label">Precio Adulto (COP)</label>
                     <input type="number" name="precio" class="form-control" required>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" name="add" class="btn btn-primary w-100">Guardar</button>
+
+                <div class="col-12 mt-4"><h6 class="text-muted border-bottom pb-2">Datos Niños (Opcional)</h6></div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Precio Niño (COP)</label>
+                    <input type="number" name="precio_nino" class="form-control" placeholder="0 si no aplica">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Rango de Edad</label>
+                    <input type="text" name="rango_nino" class="form-control" placeholder="Ej: 4 a 9 años">
+                </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" name="add" class="btn btn-primary w-100 btn-lg">Guardar Tour</button>
                 </div>
             </form>
         </div>
@@ -133,13 +155,23 @@ if (isset($_GET['delete'])) {
     <div class="card mt-4 shadow-sm">
         <div class="card-body">
             <table class="table table-hover">
-                <thead><tr><th>URL (Slug)</th><th>Tour</th><th>Precio COP</th><th>Acción</th></tr></thead>
+                <thead><tr><th>Tour</th><th>Adulto</th><th>Niño</th><th>Acción</th></tr></thead>
                 <tbody>
                     <?php foreach ($tours as $slug => $tour): ?>
                     <tr>
-                        <td><code><?= $slug ?></code></td>
-                        <td><?= htmlspecialchars($tour['nombre']) ?></td>
+                        <td>
+                            <strong><?= htmlspecialchars($tour['nombre']) ?></strong><br>
+                            <small class="text-muted">/<?= $slug ?></small>
+                        </td>
                         <td>$<?= number_format($tour['precio_cop']) ?></td>
+                        <td>
+                            <?php if(!empty($tour['precio_nino'])): ?>
+                                $<?= number_format($tour['precio_nino']) ?><br>
+                                <small class="text-muted"><?= $tour['rango_nino'] ?></small>
+                            <?php else: ?>
+                                <span class="text-muted">-</span>
+                            <?php endif; ?>
+                        </td>
                         <td><a href="?delete=<?= $slug ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar?');">Borrar</a></td>
                     </tr>
                     <?php endforeach; ?>
@@ -155,11 +187,10 @@ if (isset($_GET['delete'])) {
 
     inputNombre.addEventListener('input', function() {
         let text = this.value;
-        // Lógica JS similar a la de PHP para previsualizar
         let slug = text.toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quitar tildes
-            .replace(/[^a-z0-9]+/g, '-') // Reemplazar no alfanuméricos por guion
-            .replace(/^-+|-+$/g, ''); // Quitar guiones al inicio y final (trim)
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+            .replace(/[^a-z0-9]+/g, '-') 
+            .replace(/^-+|-+$/g, ''); 
             
         inputSlug.value = slug;
     });
