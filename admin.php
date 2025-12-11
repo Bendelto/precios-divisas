@@ -37,13 +37,18 @@ if (isset($_POST['save_config'])) {
 if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
-    // Crear SLUG: Si el usuario lo escribe lo usamos, si no, lo creamos del nombre
-    $slug = !empty($_POST['slug']) ? $_POST['slug'] : $nombre;
-    // Limpieza básica del slug (minúsculas, guiones, sin tildes)
-    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slug))));
     
-    // Guardamos usando el SLUG como CLAVE (ID)
-    $tours[$slug] = ['nombre' => $nombre, 'precio_cop' => $precio];
+    // 1. Crear SLUG
+    $slugInput = !empty($_POST['slug']) ? $_POST['slug'] : $nombre;
+    
+    // 2. Limpieza PROFUNDA del slug (Corrección solicitada)
+    // Transliterar a ASCII, minúsculas, reemplazar no-alfanuméricos por guiones
+    $cleanSlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slugInput)));
+    // 3. Eliminar guiones sobrantes al inicio o final (TRIM específico)
+    $cleanSlug = trim($cleanSlug, '-');
+    
+    // Guardamos usando el SLUG limpio como CLAVE
+    $tours[$cleanSlug] = ['nombre' => $nombre, 'precio_cop' => $precio];
     
     file_put_contents($fileTours, json_encode($tours));
     header("Location: admin.php");
@@ -105,15 +110,14 @@ if (isset($_GET['delete'])) {
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">Nuevo / Editar Tour</div>
         <div class="card-body">
-            <form method="post" class="row g-3">
+            <form method="post" class="row g-3" id="tourForm">
                 <div class="col-md-4">
                     <label class="form-label">Nombre del Tour</label>
-                    <input type="text" name="nombre" class="form-control" required>
+                    <input type="text" name="nombre" id="inputNombre" class="form-control" required>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">URL (Slug)</label>
-                    <input type="text" name="slug" class="form-control" placeholder="ej: isla-palma (opcional)">
-                    <small class="text-muted">Si lo dejas vacío, se crea automático.</small>
+                    <label class="form-label">URL Amigable (Auto)</label>
+                    <input type="text" name="slug" id="inputSlug" class="form-control bg-light" placeholder="se-genera-automatico">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Precio COP</label>
@@ -144,5 +148,22 @@ if (isset($_GET['delete'])) {
         </div>
     </div>
 </div>
+
+<script>
+    const inputNombre = document.getElementById('inputNombre');
+    const inputSlug = document.getElementById('inputSlug');
+
+    inputNombre.addEventListener('input', function() {
+        let text = this.value;
+        // Lógica JS similar a la de PHP para previsualizar
+        let slug = text.toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quitar tildes
+            .replace(/[^a-z0-9]+/g, '-') // Reemplazar no alfanuméricos por guion
+            .replace(/^-+|-+$/g, ''); // Quitar guiones al inicio y final (trim)
+            
+        inputSlug.value = slug;
+    });
+</script>
+
 </body>
 </html>

@@ -23,17 +23,17 @@ $tasa_oficial_brl = 1 / $rates['rates']['BRL'];
 $tasa_tuya_usd = $tasa_oficial_usd - $margen_usd;
 $tasa_tuya_brl = $tasa_oficial_brl - $margen_brl;
 
-// 4. CARGAR TOURS Y DETECTAR RUTA (RUTAS LIMPIAS)
+// 4. CARGAR TOURS Y DETECTAR RUTA
 $tours = file_exists('data.json') ? json_decode(file_get_contents('data.json'), true) : [];
 
 // Detectar slug de la URL
-// Obtenemos la URL actual (ej: /precios/isla-palma)
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-// Eliminamos la carpeta base donde está el script para quedarnos solo con el slug
 $base_path = dirname($_SERVER['SCRIPT_NAME']);
+// Corrección para evitar slashes dobles si dirname es /
+if($base_path == '/') $base_path = '';
 $slug_solicitado = trim(str_replace($base_path, '', $request_uri), '/');
 
-// Verificamos si existe ese slug en nuestros tours
+// Verificamos si existe ese slug
 $singleTour = null;
 if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
     $singleTour = $tours[$slug_solicitado];
@@ -49,8 +49,23 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .card-price { border: 0; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); transition: transform 0.2s; }
-        .card-price:hover { transform: translateY(-3px); }
+        
+        /* Estilos Tarjeta Clickeable */
+        .card-price { 
+            border: 0; 
+            border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+            transition: transform 0.2s, box-shadow 0.2s; 
+            text-decoration: none; /* Quitar subrayado del link */
+            color: inherit; /* Mantener color de texto */
+            display: block; /* Importante para que el <a> ocupe todo */
+        }
+        .card-price:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            color: inherit;
+        }
+
         .price-usd { color: #198754; font-weight: 700; font-size: 1.3rem; }
         .price-brl { color: #0d6efd; font-weight: 700; font-size: 1.3rem; }
         .badge-tasa { font-size: 0.75rem; font-weight: normal; background: #e9ecef; color: #495057; padding: 5px 10px; border-radius: 20px; }
@@ -73,7 +88,7 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
     <?php if ($singleTour): ?>
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
-                <div class="card card-price p-4 text-center">
+                <div class="card card-price p-4 text-center cursor-default" style="cursor: default;">
                     <h3 class="fw-bold mb-3"><?= htmlspecialchars($singleTour['nombre']) ?></h3>
                     <div class="bg-light p-3 rounded mb-3">
                         <small class="text-uppercase text-muted fw-bold">Precio Base</small><br>
@@ -104,7 +119,7 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
         <div class="row g-4">
             <?php foreach ($tours as $slug => $tour): ?>
             <div class="col-md-6 col-lg-4">
-                <div class="card card-price h-100 p-3">
+                <a href="./<?= $slug ?>" class="card card-price h-100 p-3">
                     <div class="d-flex justify-content-between align-items-start">
                         <h5 class="card-title fw-bold mb-0"><?= htmlspecialchars($tour['nombre']) ?></h5>
                         <span class="badge bg-light text-dark border">$<?= number_format($tour['precio_cop']) ?> COP</span>
@@ -115,20 +130,11 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                             <div class="price-usd">🇺🇸 $<?= number_format($tour['precio_cop'] / $tasa_tuya_usd, 0) ?></div>
                             <div class="price-brl">🇧🇷 R$ <?= number_format($tour['precio_cop'] / $tasa_tuya_brl, 0) ?></div>
                         </div>
-                    </div>
-                    <div class="mt-3">
-                         <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white">🔗</span>
-                            <?php 
-                                $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http"; 
-                                $fullUrl = "$protocol://$_SERVER[HTTP_HOST]" . dirname($_SERVER['SCRIPT_NAME']) . "/$slug";
-                                // Corrección por si dirname devuelve un punto o sin slash final
-                                $fullUrl = str_replace(array('/.', '//'), '/', $fullUrl);
-                            ?>
-                            <input type="text" value="<?= $fullUrl ?>" class="form-control" onclick="this.select()" readonly style="color:gray;">
+                        <div class="text-muted opacity-50">
+                            ➝
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             <?php endforeach; ?>
         </div>
