@@ -1,32 +1,52 @@
 <?php
 session_start();
-// SEGURIDAD SIMPLE
-if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') {
+// --- SEGURIDAD ---
+if (isset($_POST['login']) && $_POST['pass'] == 'TU_CONTRASEÑA') { // <--- PON TU CONTRASEÑA AQUÍ
     $_SESSION['admin'] = true;
 }
 if (!isset($_SESSION['admin'])) {
-    echo '<form method="post" style="text-align:center; margin-top:50px;">
-            <input type="password" name="pass" placeholder="Contraseña">
-            <button name="login" type="submit">Entrar</button>
-          </form>';
+    echo '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+          <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+            <form method="post" class="card p-4 shadow">
+                <h4 class="mb-3">Acceso Admin</h4>
+                <input type="password" name="pass" class="form-control mb-2" placeholder="Contraseña">
+                <button name="login" type="submit" class="btn btn-primary w-100">Entrar</button>
+            </form>
+          </div>';
     exit;
 }
 
-$file = 'data.json';
-$tours = file_exists($file) ? json_decode(file_get_contents($file), true) : [];
+// --- ARCHIVOS DE DATOS ---
+$fileTours = 'data.json';
+$fileConfig = 'config.json';
 
-// AGREGAR TOUR
-if (isset($_POST['add'])) {
-    $tours[] = ['nombre' => $_POST['nombre'], 'precio_cop' => $_POST['precio']];
-    file_put_contents($file, json_encode($tours));
+// Cargar datos existentes
+$tours = file_exists($fileTours) ? json_decode(file_get_contents($fileTours), true) : [];
+$config = file_exists($fileConfig) ? json_decode(file_get_contents($fileConfig), true) : ['margen_usd' => 200, 'margen_brl' => 200];
+
+// --- GUARDAR CONFIGURACIÓN DE TASAS ---
+if (isset($_POST['save_config'])) {
+    $config['margen_usd'] = floatval($_POST['margen_usd']);
+    $config['margen_brl'] = floatval($_POST['margen_brl']);
+    file_put_contents($fileConfig, json_encode($config));
     header("Location: admin.php");
+    exit;
 }
 
-// BORRAR TOUR
+// --- AGREGAR TOUR ---
+if (isset($_POST['add'])) {
+    $tours[] = ['nombre' => $_POST['nombre'], 'precio_cop' => $_POST['precio']];
+    file_put_contents($fileTours, json_encode($tours));
+    header("Location: admin.php");
+    exit;
+}
+
+// --- BORRAR TOUR ---
 if (isset($_GET['delete'])) {
     unset($tours[$_GET['delete']]);
-    file_put_contents($file, json_encode(array_values($tours)));
+    file_put_contents($fileTours, json_encode(array_values($tours)));
     header("Location: admin.php");
+    exit;
 }
 ?>
 
@@ -35,38 +55,75 @@ if (isset($_GET['delete'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Tours</title>
+    <title>Admin Tours & Tasas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="container py-5">
-    <h2>Administrar Tours</h2>
-    
-    <form method="post" class="mb-4 p-3 bg-light rounded">
-        <div class="row">
-            <div class="col-md-6">
-                <input type="text" name="nombre" class="form-control" placeholder="Nombre del Tour" required>
-            </div>
-            <div class="col-md-4">
-                <input type="number" name="precio" class="form-control" placeholder="Precio COP" required>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" name="add" class="btn btn-primary w-100">Agregar</button>
-            </div>
-        </div>
-    </form>
+<body class="bg-light py-5">
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Panel de Control</h2>
+        <a href="index.php" target="_blank" class="btn btn-outline-success">Ver Página Pública</a>
+    </div>
 
-    <table class="table table-striped">
-        <thead><tr><th>Tour</th><th>Precio COP</th><th>Acción</th></tr></thead>
-        <tbody>
-            <?php foreach ($tours as $id => $tour): ?>
-            <tr>
-                <td><?= $tour['nombre'] ?></td>
-                <td>$<?= number_format($tour['precio_cop']) ?></td>
-                <td><a href="?delete=<?= $id ?>" class="btn btn-danger btn-sm">Borrar</a></td>
-            </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-    <a href="index.php" target="_blank" class="btn btn-success">Ver Página Pública</a>
+    <div class="card mb-4 border-warning">
+        <div class="card-header bg-warning text-dark fw-bold">📉 Ajuste de Cambio (Protección)</div>
+        <div class="card-body">
+            <p class="small text-muted">Aquí defines cuánto restar a la tasa oficial para calcular tus precios. Ejemplo: Si el dólar oficial está a $4.000 y pones 200 de margen, el sistema usará $3.800.</p>
+            <form method="post" class="row g-3">
+                <div class="col-md-5">
+                    <label>Margen a restar al Dólar (COP)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">-$</span>
+                        <input type="number" name="margen_usd" class="form-control" value="<?= $config['margen_usd'] ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <label>Margen a restar al Real (COP)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">-$</span>
+                        <input type="number" name="margen_brl" class="form-control" value="<?= $config['margen_brl'] ?>" required>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" name="save_config" class="btn btn-dark w-100">Guardar Tasa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">Nuevo Tour</div>
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                <div class="col-md-6">
+                    <input type="text" name="nombre" class="form-control" placeholder="Nombre del Tour" required>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" name="precio" class="form-control" placeholder="Precio en Pesos (COP)" required>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" name="add" class="btn btn-primary w-100">Agregar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4 shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead><tr><th>Tour</th><th>Precio COP</th><th>Acción</th></tr></thead>
+                <tbody>
+                    <?php foreach ($tours as $id => $tour): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($tour['nombre']) ?></td>
+                        <td>$<?= number_format($tour['precio_cop']) ?></td>
+                        <td><a href="?delete=<?= $id ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar?');">Borrar</a></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 </body>
 </html>
