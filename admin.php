@@ -1,7 +1,7 @@
 <?php
 session_start();
 // SEGURIDAD SIMPLE
-if (isset($_POST['login']) && $_POST['pass'] == 'TU_CONTRASEÑA') {
+if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') {
     $_SESSION['admin'] = true;
 }
 if (!isset($_SESSION['admin'])) {
