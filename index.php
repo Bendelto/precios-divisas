@@ -23,7 +23,7 @@ $tasa_oficial_brl = 1 / $rates['rates']['BRL'];
 $tasa_tuya_usd = $tasa_oficial_usd - $margen_usd;
 $tasa_tuya_brl = $tasa_oficial_brl - $margen_brl;
 
-// FUNCIÓN DE REDONDEO INTELIGENTE (0.5 ARRIBA)
+// FUNCIÓN DE REDONDEO INTELIGENTE
 function precio_inteligente($valor) {
     $redondeado = ceil($valor * 2) / 2;
     return (float)$redondeado; 
@@ -56,9 +56,8 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
     <style>
         body { background-color: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #333; }
         
-        /* Contenedor principal responsive */
         .main-container { max-width: 1200px; margin: 0 auto; }
-        .calc-container { max-width: 600px; margin: 0 auto; } /* Solo para la calculadora */
+        .calc-container { max-width: 600px; margin: 0 auto; }
 
         .card-price { 
             border: 0; 
@@ -77,32 +76,37 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             color: inherit;
         }
         
-        /* Tipografía */
         h4, h6 { font-weight: 700; color: #2c3e50; }
         
-        /* Colores de moneda */
         .price-usd { color: #198754; font-weight: 700; }
         .price-brl { color: #0d6efd; font-weight: 700; }
-        .price-cop-highlight { color: #212529; font-weight: 800; font-size: 1.4rem; } /* COP Resaltado */
+        .price-cop-highlight { color: #212529; font-weight: 800; font-size: 1.4rem; }
         
-        /* Badges de Tasa (Sin emojis) */
+        /* ESTILO DE BANDERAS */
+        .flag-icon {
+            width: 20px;
+            height: 15px;
+            object-fit: cover;
+            border-radius: 3px;
+            vertical-align: text-bottom;
+            margin-right: 5px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
         .badge-tasa { 
             font-size: 0.8rem; 
             background: #fff; 
             border: 1px solid #dee2e6; 
             color: #6c757d; 
-            padding: 5px 10px; 
+            padding: 6px 12px; 
             border-radius: 50px; 
             display: inline-flex;
             align-items: center;
-            gap: 5px;
         }
 
-        /* Estilos Calculadora */
         .calc-box { background-color: #fff; border-radius: 12px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .form-control-qty { text-align: center; font-weight: bold; border: 1px solid #dee2e6; background: #f8f9fa; height: 50px; font-size: 1.3rem; color: #495057; }
         
-        /* Caja de Total (Azul Suave) */
         .total-display { 
             background-color: #e7f1ff; 
             color: #0d6efd; 
@@ -112,7 +116,6 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             margin-top: 20px; 
         }
         
-        /* Botones Sólidos */
         .btn-solid-blue {
             background-color: #0d6efd;
             color: white;
@@ -140,8 +143,7 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
         }
         .btn-back:hover { background-color: #dee2e6; color: black; }
 
-        /* Iconos de moneda textuales */
-        .currency-tag { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .currency-tag { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
 
     </style>
 </head>
@@ -163,8 +165,12 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                         <span class="text-uppercase text-muted fw-bold" style="font-size:0.7rem;">Adulto</span>
                         <div class="price-cop-highlight my-1">$<?= number_format($singleTour['precio_cop']) ?></div>
                         <div class="d-flex flex-column gap-1">
-                            <span class="price-usd small">USD $<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?></span>
-                            <span class="price-brl small">BRL R$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?></span>
+                            <span class="price-usd small">
+                                <img src="https://flagcdn.com/w40/us.png" class="flag-icon" alt="USA"> USD $<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?>
+                            </span>
+                            <span class="price-brl small">
+                                <img src="https://flagcdn.com/w40/br.png" class="flag-icon" alt="Brazil"> BRL R$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?>
+                            </span>
                         </div>
                     </div>
                     <div class="col-6 ps-2">
@@ -172,8 +178,12 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                         <?php if(!empty($singleTour['precio_nino']) && $singleTour['precio_nino'] > 0): ?>
                             <div class="price-cop-highlight my-1">$<?= number_format($singleTour['precio_nino']) ?></div>
                             <div class="d-flex flex-column gap-1">
-                                <span class="price-usd small">USD $<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?></span>
-                                <span class="price-brl small">BRL R$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?></span>
+                                <span class="price-usd small">
+                                    <img src="https://flagcdn.com/w40/us.png" class="flag-icon" alt="USA"> USD $<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_usd) ?>
+                                </span>
+                                <span class="price-brl small">
+                                    <img src="https://flagcdn.com/w40/br.png" class="flag-icon" alt="Brazil"> BRL R$<?= precio_inteligente($singleTour['precio_nino'] / $tasa_tuya_brl) ?>
+                                </span>
                             </div>
                         <?php else: ?>
                             <div class="text-muted mt-3 small">- No aplica -</div>
@@ -202,11 +212,15 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                         
                         <div class="row pt-3 border-top border-primary-subtle">
                             <div class="col-6 border-end border-primary-subtle">
-                                <div class="currency-tag text-success">Dollars (USD)</div>
+                                <div class="currency-tag text-success mb-1">
+                                    <img src="https://flagcdn.com/w40/us.png" class="flag-icon" alt="USA"> Dollars
+                                </div>
                                 <div class="fw-bold text-success fs-4" id="totalUSD">$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?></div>
                             </div>
                             <div class="col-6">
-                                <div class="currency-tag text-primary">Reais (BRL)</div>
+                                <div class="currency-tag text-primary mb-1">
+                                    <img src="https://flagcdn.com/w40/br.png" class="flag-icon" alt="Brazil"> Reais
+                                </div>
                                 <div class="fw-bold text-primary fs-4" id="totalBRL">R$ <?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?></div>
                             </div>
                         </div>
@@ -261,9 +275,11 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             
             <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
                 <span class="badge-tasa">
+                    <img src="https://flagcdn.com/w40/us.png" class="flag-icon" alt="USA">
                     <span class="fw-bold text-success">USD</span> $<?= number_format($tasa_tuya_usd, 0) ?>
                 </span>
                 <span class="badge-tasa">
+                    <img src="https://flagcdn.com/w40/br.png" class="flag-icon" alt="Brazil">
                     <span class="fw-bold text-primary">BRL</span> $<?= number_format($tasa_tuya_brl, 0) ?>
                 </span>
             </div>
@@ -284,8 +300,12 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                     
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top">
                         <div class="d-flex flex-column gap-1">
-                            <div class="price-usd"><span class="currency-tag">USD</span> $<?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_usd) ?></div>
-                            <div class="price-brl"><span class="currency-tag">BRL</span> R$ <?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_brl) ?></div>
+                            <div class="price-usd">
+                                <img src="https://flagcdn.com/w40/us.png" class="flag-icon" alt="USA"> USD $<?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_usd) ?>
+                            </div>
+                            <div class="price-brl">
+                                <img src="https://flagcdn.com/w40/br.png" class="flag-icon" alt="Brazil"> BRL R$ <?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_brl) ?>
+                            </div>
                         </div>
                         <div class="text-primary fs-5">
                             <i class="fa-solid fa-circle-arrow-right"></i>
