@@ -25,13 +25,7 @@ $tasa_tuya_brl = $tasa_oficial_brl - $margen_brl;
 
 // --- FUNCIÓN DE REDONDEO INTELIGENTE (0.5 ARRIBA) ---
 function precio_inteligente($valor) {
-    // Multiplicamos por 2, redondeamos hacia arriba, y dividimos por 2
-    // Ejemplo: 50.20 -> 100.4 -> 101 -> 50.5
-    // Ejemplo: 50.51 -> 101.02 -> 102 -> 51.0
     $redondeado = ceil($valor * 2) / 2;
-    
-    // Formateo visual: Si es entero, no mostrar decimales. Si es .5, mostrar 1 decimal.
-    // number_format fuerza decimales, así que usamos un truco simple
     return (float)$redondeado; 
 }
 
@@ -78,20 +72,27 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
 
         .price-usd { color: #198754; font-weight: 700; font-size: 1.3rem; }
         .price-brl { color: #0d6efd; font-weight: 700; font-size: 1.3rem; }
-        .badge-tasa { font-size: 0.75rem; font-weight: normal; background: #e9ecef; color: #495057; padding: 5px 10px; border-radius: 20px; }
+        /* Badge más limpio */
+        .badge-tasa { font-size: 0.8rem; font-weight: 500; background: #e9ecef; color: #495057; padding: 6px 12px; border-radius: 20px; border: 1px solid #dee2e6; }
     </style>
 </head>
 <body class="container py-5">
     
     <div class="text-center mb-5">
         <h1 class="fw-bold text-dark">Descubre Cartagena 🌴</h1>
-        <div class="d-inline-flex gap-3 mt-2">
-            <span class="badge-tasa">
-                🇺🇸 Tasa cálculo: $<?= number_format($tasa_tuya_usd, 0) ?> COP 
-            </span>
-            <span class="badge-tasa">
-                🇧🇷 Tasa cálculo: $<?= number_format($tasa_tuya_brl, 0) ?> COP
-            </span>
+        
+        <div class="d-flex flex-column align-items-center justify-content-center mt-3">
+            <div class="d-inline-flex gap-2">
+                <span class="badge-tasa">
+                    🇺🇸 Cambio Local: $<?= number_format($tasa_tuya_usd, 0) ?> 
+                </span>
+                <span class="badge-tasa">
+                    🇧🇷 Cambio Local: $<?= number_format($tasa_tuya_brl, 0) ?> 
+                </span>
+            </div>
+            <small class="text-muted mt-2" style="font-size: 0.7rem; opacity: 0.7;">
+                * Ref. Casas de cambio
+            </small>
         </div>
     </div>
 
