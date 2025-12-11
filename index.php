@@ -59,6 +59,15 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
         .main-container { max-width: 1200px; margin: 0 auto; }
         .calc-container { max-width: 600px; margin: 0 auto; }
 
+        /* ESTILO PARA EL LOGO */
+        .main-logo {
+            max-width: 100%; /* Responsive en móvil */
+            width: 300px;    /* Tamaño ideal en PC */
+            height: auto;    /* Mantener proporción */
+            display: block;
+            margin: 0 auto;
+        }
+
         .card-price { 
             border: 0; 
             border-radius: 16px; 
@@ -82,64 +91,35 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
         .price-brl { color: #0d6efd; font-weight: 700; }
         .price-cop-highlight { color: #212529; font-weight: 800; font-size: 1.4rem; }
         
-        /* ESTILO DE BANDERAS */
         .flag-icon {
-            width: 20px;
-            height: 15px;
-            object-fit: cover;
-            border-radius: 3px;
-            vertical-align: text-bottom;
-            margin-right: 5px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            width: 20px; height: 15px; object-fit: cover; border-radius: 3px;
+            vertical-align: text-bottom; margin-right: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         
         .badge-tasa { 
-            font-size: 0.8rem; 
-            background: #fff; 
-            border: 1px solid #dee2e6; 
-            color: #6c757d; 
-            padding: 6px 12px; 
-            border-radius: 50px; 
-            display: inline-flex;
-            align-items: center;
+            font-size: 0.8rem; background: #fff; border: 1px solid #dee2e6; color: #6c757d; 
+            padding: 6px 12px; border-radius: 50px; display: inline-flex; align-items: center;
         }
 
         .calc-box { background-color: #fff; border-radius: 12px; padding: 20px; border: 1px solid #edf2f7; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
         .form-control-qty { text-align: center; font-weight: bold; border: 1px solid #dee2e6; background: #f8f9fa; height: 50px; font-size: 1.3rem; color: #495057; }
         
         .total-display { 
-            background-color: #e7f1ff; 
-            color: #0d6efd; 
-            border: 1px solid #cce5ff;
-            border-radius: 12px; 
-            padding: 20px; 
-            margin-top: 20px; 
+            background-color: #e7f1ff; color: #0d6efd; border: 1px solid #cce5ff;
+            border-radius: 12px; padding: 20px; margin-top: 20px; 
         }
         
         .btn-solid-blue {
-            background-color: #0d6efd;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 20px;
-            font-weight: 600;
-            width: 100%;
-            display: block;
-            text-align: center;
-            text-decoration: none;
-            transition: background 0.2s;
+            background-color: #0d6efd; color: white; border: none; border-radius: 50px;
+            padding: 12px 20px; font-weight: 600; width: 100%; display: block;
+            text-align: center; text-decoration: none; transition: background 0.2s;
         }
         .btn-solid-blue:hover { background-color: #0b5ed7; color: white; }
 
         .btn-back {
-            background-color: #e9ecef;
-            color: #212529;
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            text-decoration: none;
-            font-weight: bold;
-            transition: background 0.2s;
+            background-color: #e9ecef; color: #212529; width: 40px; height: 40px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            text-decoration: none; font-weight: bold; transition: background 0.2s;
         }
         .btn-back:hover { background-color: #dee2e6; color: black; }
 
@@ -271,7 +251,7 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
 
     <?php else: ?>
         <div class="text-center mb-5 pt-3">
-            <h3 class="fw-bold text-dark mb-2">Descubre Cartagena 🌴</h3>
+            <img src="logo.svg" alt="Descubre Cartagena" class="main-logo mb-3">
             
             <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
                 <span class="badge-tasa">
