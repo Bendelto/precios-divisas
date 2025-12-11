@@ -1,7 +1,7 @@
 <?php
 session_start();
 // --- SEGURIDAD ---
-if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') { // <--- PON TU CONTRASEÑA AQUÍ
+if (isset($_POST['login']) && $_POST['pass'] == 'TU_CONTRASEÑA') { // <--- PON TU CONTRASEÑA AQUÍ
     $_SESSION['admin'] = true;
 }
 if (!isset($_SESSION['admin'])) {
@@ -24,6 +24,12 @@ $fileConfig = 'config.json';
 $tours = file_exists($fileTours) ? json_decode(file_get_contents($fileTours), true) : [];
 $config = file_exists($fileConfig) ? json_decode(file_get_contents($fileConfig), true) : ['margen_usd' => 200, 'margen_brl' => 200];
 
+// --- NUEVO: ORDENAR ALFABÉTICAMENTE EN EL ADMIN ---
+uasort($tours, function($a, $b) {
+    return strcasecmp($a['nombre'], $b['nombre']);
+});
+// -------------------------------------------------
+
 // --- GUARDAR CONFIGURACIÓN DE TASAS ---
 if (isset($_POST['save_config'])) {
     $config['margen_usd'] = floatval($_POST['margen_usd']);
@@ -37,7 +43,7 @@ if (isset($_POST['save_config'])) {
 if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
-    $rango_adulto = !empty($_POST['rango_adulto']) ? $_POST['rango_adulto'] : ''; // NUEVO CAMPO ADULTO
+    $rango_adulto = !empty($_POST['rango_adulto']) ? $_POST['rango_adulto'] : ''; 
     
     // DATOS DE NIÑOS
     $precio_nino = !empty($_POST['precio_nino']) ? $_POST['precio_nino'] : 0;
@@ -51,10 +57,12 @@ if (isset($_POST['add'])) {
     $cleanSlug = trim($cleanSlug, '-');
     
     // Guardamos usando el SLUG limpio como CLAVE
+    // Nota: Al guardar, recargamos el array original sin ordenar para no perder claves, 
+    // pero PHP maneja arrays asociativos bien.
     $tours[$cleanSlug] = [
         'nombre' => $nombre, 
         'precio_cop' => $precio,
-        'rango_adulto' => $rango_adulto, // Guardar rango adulto
+        'rango_adulto' => $rango_adulto,
         'precio_nino' => $precio_nino,
         'rango_nino' => $rango_nino
     ];
