@@ -1,11 +1,44 @@
 <?php
 session_start();
 
-// --- LOGIN ---
-if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') {
-    $_SESSION['admin'] = true;
+// ==========================================
+// 1. GESTIÓN DE CREDENCIALES (JSON)
+// ==========================================
+$fileCreds = 'credenciales.json';
+
+// Si el archivo no existe, lo creamos con tus datos por defecto
+if (!file_exists($fileCreds)) {
+    $defaultCreds = [
+        'usuario' => 'admin',       // Usuario por defecto
+        'password' => 'Dc@6691400'  // Tu contraseña actual
+    ];
+    file_put_contents($fileCreds, json_encode($defaultCreds));
 }
 
+// Cargar credenciales actuales
+$creds = json_decode(file_get_contents($fileCreds), true);
+
+// ==========================================
+// 2. LÓGICA DE LOGIN
+// ==========================================
+$errorMsg = '';
+
+if (isset($_POST['login'])) {
+    $userInput = $_POST['user'] ?? '';
+    $passInput = $_POST['pass'] ?? '';
+
+    // Validar contra el archivo JSON
+    if ($userInput === $creds['usuario'] && $passInput === $creds['password']) {
+        $_SESSION['admin'] = true;
+        // Redirigir para limpiar el POST
+        header("Location: admin.php");
+        exit;
+    } else {
+        $errorMsg = 'Usuario o contraseña incorrectos';
+    }
+}
+
+// Si no está logueado, mostrar formulario
 if (!isset($_SESSION['admin'])) {
     ?>
     <!DOCTYPE html>
@@ -25,13 +58,24 @@ if (!isset($_SESSION['admin'])) {
     <body class="d-flex justify-content-center align-items-center vh-100 px-3">
         <form method="post" class="card p-4 login-card">
             <div class="text-center mb-4">
-                <h3 class="fw-bold text-dark">🔐 Admin</h3>
+                <h3 class="fw-bold text-dark">🔐 Acceso</h3>
                 <small class="text-muted">Descubre Cartagena</small>
             </div>
+            
+            <?php if($errorMsg): ?>
+                <div class="alert alert-danger text-center p-2 mb-3 small"><?= $errorMsg ?></div>
+            <?php endif; ?>
+
             <div class="mb-3">
-                <label class="form-label small text-muted">Contraseña</label>
-                <input type="password" name="pass" class="form-control form-control-lg text-center" placeholder="••••••••" required>
+                <label class="form-label small text-muted fw-bold">Usuario</label>
+                <input type="text" name="user" class="form-control form-control-lg" placeholder="Ej: admin" required autofocus>
             </div>
+            
+            <div class="mb-4">
+                <label class="form-label small text-muted fw-bold">Contraseña</label>
+                <input type="password" name="pass" class="form-control form-control-lg" placeholder="••••••••" required>
+            </div>
+            
             <button name="login" type="submit" class="btn btn-primary w-100 btn-lg">Ingresar</button>
         </form>
     </body>
@@ -55,7 +99,7 @@ uasort($tours, function($a, $b) {
     return strcasecmp($a['nombre'], $b['nombre']);
 });
 
-// GUARDAR CONFIGURACIÓN
+// GUARDAR CONFIGURACIÓN TASAS
 if (isset($_POST['save_config'])) {
     $config['margen_usd'] = floatval($_POST['margen_usd']);
     $config['margen_brl'] = floatval($_POST['margen_brl']);
@@ -106,6 +150,13 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
+// CERRAR SESIÓN
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header("Location: admin.php");
+    exit;
+}
+
 // CARGAR DATOS PARA EDITAR
 $tourToEdit = null;
 $editingSlug = '';
@@ -132,7 +183,6 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
         }
         .table th { background-color: #f1f3f5; border-bottom: 2px solid #dee2e6; }
         
-        /* Ajuste para botones en móvil */
         .btn-action-group { display: flex; gap: 5px; justify-content: flex-end; }
         @media (max-width: 576px) {
             .btn-action-group { flex-direction: column; }
@@ -143,8 +193,14 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
 <body class="container py-4">
     
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold mb-0">Panel de Control</h2>
-        <a href="index.php" target="_blank" class="btn btn-success btn-sm fw-bold">Ver Web ↗</a>
+        <div>
+            <h2 class="fw-bold mb-0">Panel de Control</h2>
+            <small class="text-muted">Hola, <?= htmlspecialchars($creds['usuario']) ?></small>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="index.php" target="_blank" class="btn btn-success btn-sm fw-bold align-self-center">Ver Web ↗</a>
+            <a href="?logout=1" class="btn btn-outline-secondary btn-sm align-self-center">Salir</a>
+        </div>
     </div>
 
     <div class="card mb-4 border-warning shadow-sm">
