@@ -37,8 +37,9 @@ if (isset($_POST['save_config'])) {
 if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
+    $rango_adulto = !empty($_POST['rango_adulto']) ? $_POST['rango_adulto'] : ''; // NUEVO CAMPO ADULTO
     
-    // NUEVOS DATOS DE NIÑOS
+    // DATOS DE NIÑOS
     $precio_nino = !empty($_POST['precio_nino']) ? $_POST['precio_nino'] : 0;
     $rango_nino = !empty($_POST['rango_nino']) ? $_POST['rango_nino'] : '';
     
@@ -53,8 +54,9 @@ if (isset($_POST['add'])) {
     $tours[$cleanSlug] = [
         'nombre' => $nombre, 
         'precio_cop' => $precio,
-        'precio_nino' => $precio_nino, // Guardar precio niño
-        'rango_nino' => $rango_nino    // Guardar rango edad
+        'rango_adulto' => $rango_adulto, // Guardar rango adulto
+        'precio_nino' => $precio_nino,
+        'rango_nino' => $rango_nino
     ];
     
     file_put_contents($fileTours, json_encode($tours));
@@ -129,9 +131,14 @@ if (isset($_GET['delete'])) {
                     <label class="form-label">URL Amigable (Auto)</label>
                     <input type="text" name="slug" id="inputSlug" class="form-control bg-light" placeholder="se-genera-automatico">
                 </div>
-                <div class="col-md-12">
+                
+                <div class="col-md-6">
                     <label class="form-label">Precio Adulto (COP)</label>
                     <input type="number" name="precio" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Rango Edad Adulto</label>
+                    <input type="text" name="rango_adulto" class="form-control" placeholder="Ej: 10+ años">
                 </div>
 
                 <div class="col-12 mt-4"><h6 class="text-muted border-bottom pb-2">Datos Niños (Opcional)</h6></div>
@@ -141,7 +148,7 @@ if (isset($_GET['delete'])) {
                     <input type="number" name="precio_nino" class="form-control" placeholder="0 si no aplica">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Rango de Edad</label>
+                    <label class="form-label">Rango de Edad Niño</label>
                     <input type="text" name="rango_nino" class="form-control" placeholder="Ej: 4 a 9 años">
                 </div>
 
@@ -163,7 +170,10 @@ if (isset($_GET['delete'])) {
                             <strong><?= htmlspecialchars($tour['nombre']) ?></strong><br>
                             <small class="text-muted">/<?= $slug ?></small>
                         </td>
-                        <td>$<?= number_format($tour['precio_cop']) ?></td>
+                        <td>
+                            $<?= number_format($tour['precio_cop']) ?><br>
+                            <small class="text-muted"><?= !empty($tour['rango_adulto']) ? $tour['rango_adulto'] : '' ?></small>
+                        </td>
                         <td>
                             <?php if(!empty($tour['precio_nino'])): ?>
                                 $<?= number_format($tour['precio_nino']) ?><br>

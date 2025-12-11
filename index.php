@@ -59,11 +59,11 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
         .main-container { max-width: 1200px; margin: 0 auto; }
         .calc-container { max-width: 600px; margin: 0 auto; }
 
-        /* ESTILO PARA EL LOGO */
+        /* ESTILO PARA EL LOGO MODIFICADO */
         .main-logo {
-            max-width: 100%; /* Responsive en móvil */
-            width: 300px;    /* Tamaño ideal en PC */
-            height: auto;    /* Mantener proporción */
+            width: 300px;        /* Tamaño base escritorio */
+            max-width: 85%;      /* MÓVIL: Esto reduce el logo un 15% (más del 10% pedido) */
+            height: auto;
             display: block;
             margin: 0 auto;
         }
@@ -142,7 +142,8 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
             <div class="card card-price p-4 mb-4" style="cursor: default; transform: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
                 <div class="row g-0 text-center mb-2">
                     <div class="col-6 border-end pe-2">
-                        <span class="text-uppercase text-muted fw-bold" style="font-size:0.7rem;">Adulto</span>
+                        <span class="text-uppercase text-muted fw-bold" style="font-size:0.7rem;">Adulto <small class="fw-normal">(<?= !empty($singleTour['rango_adulto']) ? $singleTour['rango_adulto'] : '' ?>)</small></span>
+                        
                         <div class="price-cop-highlight my-1">$<?= number_format($singleTour['precio_cop']) ?></div>
                         <div class="d-flex flex-column gap-1">
                             <span class="price-usd small">
@@ -276,6 +277,9 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                     
                     <div class="price-cop-highlight mb-3">
                         $<?= number_format($tour['precio_cop']) ?> <small class="fs-6 text-muted fw-normal">COP</small>
+                        <?php if(!empty($tour['rango_adulto'])): ?>
+                            <div style="font-size: 0.7rem; color: #999; font-weight: normal; margin-top: -5px;">(Adultos <?= $tour['rango_adulto'] ?>)</div>
+                        <?php endif; ?>
                     </div>
                     
                     <div class="d-flex justify-content-between align-items-end mt-auto pt-3 border-top">
