@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// --- 1. LOGIN OPTIMIZADO PARA MÓVIL ---
-if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') { // <--- CLAVE ACTUALIZADA
+// --- LOGIN ---
+if (isset($_POST['login']) && $_POST['pass'] == 'Dc@6691400') {
     $_SESSION['admin'] = true;
 }
 
@@ -17,13 +17,7 @@ if (!isset($_SESSION['admin'])) {
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <style>
             body { background-color: #f0f2f5; }
-            .login-card { 
-                width: 100%; 
-                max-width: 400px; 
-                border: 0; 
-                border-radius: 16px; 
-                box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
-            }
+            .login-card { width: 100%; max-width: 400px; border: 0; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
             .form-control-lg { font-size: 1.1rem; }
             .btn-lg { font-weight: 600; }
         </style>
@@ -50,20 +44,18 @@ if (!isset($_SESSION['admin'])) {
 //      CÓDIGO DEL PANEL DE ADMINISTRACIÓN
 // ==========================================
 
-// --- ARCHIVOS DE DATOS ---
 $fileTours = 'data.json';
 $fileConfig = 'config.json';
 
-// Cargar datos
 $tours = file_exists($fileTours) ? json_decode(file_get_contents($fileTours), true) : [];
 $config = file_exists($fileConfig) ? json_decode(file_get_contents($fileConfig), true) : ['margen_usd' => 200, 'margen_brl' => 200];
 
-// --- ORDENAR ALFABÉTICAMENTE ---
+// ORDENAR ALFABÉTICAMENTE
 uasort($tours, function($a, $b) {
     return strcasecmp($a['nombre'], $b['nombre']);
 });
 
-// --- GUARDAR CONFIGURACIÓN ---
+// GUARDAR CONFIGURACIÓN
 if (isset($_POST['save_config'])) {
     $config['margen_usd'] = floatval($_POST['margen_usd']);
     $config['margen_brl'] = floatval($_POST['margen_brl']);
@@ -72,7 +64,7 @@ if (isset($_POST['save_config'])) {
     exit;
 }
 
-// --- GUARDAR / EDITAR TOUR ---
+// GUARDAR / EDITAR TOUR
 if (isset($_POST['add'])) {
     $nombre = $_POST['nombre'];
     $precio = $_POST['precio'];
@@ -80,12 +72,10 @@ if (isset($_POST['add'])) {
     $precio_nino = !empty($_POST['precio_nino']) ? $_POST['precio_nino'] : 0;
     $rango_nino = !empty($_POST['rango_nino']) ? $_POST['rango_nino'] : '';
     
-    // Crear SLUG
     $slugInput = !empty($_POST['slug']) ? $_POST['slug'] : $nombre;
     $cleanSlug = strtolower(preg_replace('/[^A-Za-z0-9-]+/', '-', iconv('UTF-8', 'ASCII//TRANSLIT', $slugInput)));
     $cleanSlug = trim($cleanSlug, '-');
     
-    // Si es edición y cambia el slug, borrar el viejo
     if (!empty($_POST['original_slug']) && $_POST['original_slug'] != $cleanSlug) {
         if(isset($tours[$_POST['original_slug']])) {
             unset($tours[$_POST['original_slug']]);
@@ -105,7 +95,7 @@ if (isset($_POST['add'])) {
     exit;
 }
 
-// --- BORRAR TOUR ---
+// BORRAR TOUR
 if (isset($_GET['delete'])) {
     $slugToDelete = $_GET['delete'];
     if(isset($tours[$slugToDelete])) {
@@ -116,7 +106,7 @@ if (isset($_GET['delete'])) {
     exit;
 }
 
-// --- CARGAR DATOS PARA EDITAR ---
+// CARGAR DATOS PARA EDITAR
 $tourToEdit = null;
 $editingSlug = '';
 if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
@@ -133,7 +123,6 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
     <title>Panel Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Estilos específicos para Admin Móvil */
         body { padding-bottom: 50px; background-color: #f8f9fa; }
         .table-responsive { 
             border-radius: 12px; 
@@ -142,11 +131,12 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
             overflow: hidden;
         }
         .table th { background-color: #f1f3f5; border-bottom: 2px solid #dee2e6; }
-        .btn-group-mobile { display: flex; gap: 5px; }
+        
+        /* Ajuste para botones en móvil */
+        .btn-action-group { display: flex; gap: 5px; justify-content: flex-end; }
         @media (max-width: 576px) {
-            .btn-group-mobile { flex-direction: column; }
-            .btn-sm { width: 100%; margin-bottom: 2px; }
-            h2 { font-size: 1.5rem; }
+            .btn-action-group { flex-direction: column; }
+            .btn-action-group .btn { width: 100%; }
         }
     </style>
 </head>
@@ -244,19 +234,19 @@ if (isset($_GET['edit']) && isset($tours[$_GET['edit']])) {
                 <?php foreach ($tours as $slug => $tour): ?>
                 <tr class="<?= $slug == $editingSlug ? 'table-warning' : '' ?>">
                     <td class="ps-3">
-                        <span class="fw-bold d-block text-truncate" style="max-width: 150px;"><?= htmlspecialchars($tour['nombre']) ?></span>
+                        <span class="fw-bold d-block"><?= htmlspecialchars($tour['nombre']) ?></span>
                         <small class="text-muted" style="font-size: 0.75rem;">/<?= $slug ?></small>
                     </td>
                     <td>
-                        <small class="d-block">Ad: $<?= number_format($tour['precio_cop']) ?></small>
+                        <small class="d-block text-nowrap">Ad: $<?= number_format($tour['precio_cop']) ?></small>
                         <?php if(!empty($tour['precio_nino'])): ?>
-                            <small class="d-block text-muted">Ni: $<?= number_format($tour['precio_nino']) ?></small>
+                            <small class="d-block text-muted text-nowrap">Ni: $<?= number_format($tour['precio_nino']) ?></small>
                         <?php endif; ?>
                     </td>
                     <td class="text-end pe-3">
-                        <div class="btn-group-mobile">
-                            <a href="?edit=<?= $slug ?>" class="btn btn-outline-primary btn-sm">✏️</a>
-                            <a href="?delete=<?= $slug ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Borrar?');">🗑️</a>
+                        <div class="btn-action-group">
+                            <a href="?edit=<?= $slug ?>" class="btn btn-warning btn-sm text-dark">Editar</a>
+                            <a href="?delete=<?= $slug ?>" class="btn btn-danger btn-sm" onclick="return confirm('¿Borrar este tour?');">Borrar</a>
                         </div>
                     </td>
                 </tr>
