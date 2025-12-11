@@ -23,13 +23,24 @@ $tasa_oficial_brl = 1 / $rates['rates']['BRL'];
 $tasa_tuya_usd = $tasa_oficial_usd - $margen_usd;
 $tasa_tuya_brl = $tasa_oficial_brl - $margen_brl;
 
+// --- FUNCIÓN DE REDONDEO INTELIGENTE (0.5 ARRIBA) ---
+function precio_inteligente($valor) {
+    // Multiplicamos por 2, redondeamos hacia arriba, y dividimos por 2
+    // Ejemplo: 50.20 -> 100.4 -> 101 -> 50.5
+    // Ejemplo: 50.51 -> 101.02 -> 102 -> 51.0
+    $redondeado = ceil($valor * 2) / 2;
+    
+    // Formateo visual: Si es entero, no mostrar decimales. Si es .5, mostrar 1 decimal.
+    // number_format fuerza decimales, así que usamos un truco simple
+    return (float)$redondeado; 
+}
+
 // 4. CARGAR TOURS Y DETECTAR RUTA
 $tours = file_exists('data.json') ? json_decode(file_get_contents('data.json'), true) : [];
 
 // Detectar slug de la URL
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $base_path = dirname($_SERVER['SCRIPT_NAME']);
-// Corrección para evitar slashes dobles si dirname es /
 if($base_path == '/') $base_path = '';
 $slug_solicitado = trim(str_replace($base_path, '', $request_uri), '/');
 
@@ -50,15 +61,14 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
     <style>
         body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* Estilos Tarjeta Clickeable */
         .card-price { 
             border: 0; 
             border-radius: 12px; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
             transition: transform 0.2s, box-shadow 0.2s; 
-            text-decoration: none; /* Quitar subrayado del link */
-            color: inherit; /* Mantener color de texto */
-            display: block; /* Importante para que el <a> ocupe todo */
+            text-decoration: none; 
+            color: inherit; 
+            display: block; 
         }
         .card-price:hover { 
             transform: translateY(-3px); 
@@ -99,13 +109,13 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                         <div class="col-6">
                             <div class="border rounded p-2">
                                 <small>🇺🇸 Dólares</small><br>
-                                <span class="price-usd">$<?= number_format($singleTour['precio_cop'] / $tasa_tuya_usd, 0) ?></span>
+                                <span class="price-usd">$<?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_usd) ?></span>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="border rounded p-2">
                                 <small>🇧🇷 Reales</small><br>
-                                <span class="price-brl">R$ <?= number_format($singleTour['precio_cop'] / $tasa_tuya_brl, 0) ?></span>
+                                <span class="price-brl">R$ <?= precio_inteligente($singleTour['precio_cop'] / $tasa_tuya_brl) ?></span>
                             </div>
                         </div>
                     </div>
@@ -127,8 +137,8 @@ if (!empty($slug_solicitado) && isset($tours[$slug_solicitado])) {
                     <hr class="my-3 opacity-25">
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <div class="price-usd">🇺🇸 $<?= number_format($tour['precio_cop'] / $tasa_tuya_usd, 0) ?></div>
-                            <div class="price-brl">🇧🇷 R$ <?= number_format($tour['precio_cop'] / $tasa_tuya_brl, 0) ?></div>
+                            <div class="price-usd">🇺🇸 $<?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_usd) ?></div>
+                            <div class="price-brl">🇧🇷 R$ <?= precio_inteligente($tour['precio_cop'] / $tasa_tuya_brl) ?></div>
                         </div>
                         <div class="text-muted opacity-50">
                             ➝
